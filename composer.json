@@ -9,6 +9,7 @@
             "email": "a@xiyanghui.com"
         }
     ],
+    "minimum-stability": "beta",
     "require": {},
     "autoload": {
         "classmap": ["ImageProxyURLGenerator.php"]
