@@ -15,6 +15,11 @@ class ImageProxyURLGenerator
 
     private $secret;
 
+    const NO_TRIM_HOSTS = [
+        'aliyun-cdn.hypebeast.cn',  // HBX 的 App 图片
+        'image-cdn.hypb.st',        // HBX 的 网页版图片
+    ];
+
     public function __construct($root, $secret)
     {
         $this->root = $root;
@@ -23,14 +28,33 @@ class ImageProxyURLGenerator
 
     public function build($url, $width = null, $height = null)
     {
-        if($width)
-            $query['width']  = $width;
-        if($height)
-            $query['height'] = $height;
+        if ($width) {
+            $query['width'] = $width;
+        }
 
-        $query['ue']     = $this->XOREncrypt($url);
+        if ($height) {
+            $query['height'] = $height;
+        }
+
+        $query['ue'] = $this->XOREncrypt($url);
+
+        if ($this->shouldNotTrim($url)) {
+            $query['notrim'] = 1;
+        }
 
         return $this->root . '?' . http_build_query($query);
+    }
+
+    private function shouldNotTrim($url)
+    {
+        $parseUrl = parse_url($url);
+        $host = $parseUrl['host'] ?: "";
+
+        if (in_array($host, self::NO_TRIM_HOSTS)) {
+            return true;
+        }
+        return false;
+
     }
 
     private function XOREncrypt($url)
@@ -44,7 +68,7 @@ class ImageProxyURLGenerator
             $encrypt .= $url[$i] ^ $encodedText[$i % $kl];
         }
         $encrypt = str_replace(array('+', '/'), array('-', '_'), base64_encode($encrypt));
-        $encrypt = rtrim($encrypt,"=");
+        $encrypt = rtrim($encrypt, "=");
         return $encrypt;
     }
 }
